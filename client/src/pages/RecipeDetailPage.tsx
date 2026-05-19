@@ -122,12 +122,13 @@ export default function RecipeDetailPage() {
       {recipe.tags.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {recipe.tags.map((tag) => (
-            <span
+            <button
               key={tag.id}
-              className="px-3 py-1 bg-secondary/15 text-secondary rounded-full text-sm"
+              onClick={() => navigate(`/?tagId=${tag.id}&tagName=${encodeURIComponent(tag.name)}`)}
+              className="px-3 py-1 bg-secondary/15 text-secondary rounded-full text-sm hover:bg-secondary/30 transition-colors"
             >
               {tag.name}
-            </span>
+            </button>
           ))}
         </div>
       )}

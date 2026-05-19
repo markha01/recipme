@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { listRecipes } from '../api/recipes';
 import { listBoards } from '../api/boards';
 import type { RecipeSummary, Board, Tag, SortField, SortOrder } from '../../../shared/types';
@@ -10,6 +11,7 @@ import FilterMenu from '../components/home/FilterMenu';
 import AddButton from '../components/home/AddButton';
 
 export default function HomePage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState<'recipes' | 'boards'>('recipes');
   const [search, setSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
@@ -20,6 +22,17 @@ export default function HomePage() {
   const [loadingRecipes, setLoadingRecipes] = useState(true);
   const [loadingBoards, setLoadingBoards] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Read tag filter from URL params (e.g. when navigating from recipe detail page)
+  useEffect(() => {
+    const tagId = searchParams.get('tagId');
+    const tagName = searchParams.get('tagName');
+    if (tagId && tagName) {
+      setSelectedTag({ id: tagId, name: decodeURIComponent(tagName), userId: '', recipeCount: 0 });
+      setSearchParams({}, { replace: true });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchRecipes = useCallback(
     (searchVal: string, tagId: string | undefined, sortVal: SortField, orderVal: SortOrder) => {
