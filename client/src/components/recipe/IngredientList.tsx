@@ -7,6 +7,8 @@ interface IngredientListProps {
 
 export default function IngredientList({ ingredients, onChange }: IngredientListProps) {
   const [inputValue, setInputValue] = useState('');
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingValue, setEditingValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   function addIngredient() {
@@ -27,6 +29,32 @@ export default function IngredientList({ ingredients, onChange }: IngredientList
     }
   }
 
+  function startEditing(index: number) {
+    setEditingIndex(index);
+    setEditingValue(ingredients[index]);
+  }
+
+  function commitEdit() {
+    if (editingIndex === null) return;
+    const trimmed = editingValue.trim();
+    if (trimmed) {
+      const updated = ingredients.map((ing, i) => (i === editingIndex ? trimmed : ing));
+      onChange(updated);
+    }
+    setEditingIndex(null);
+    setEditingValue('');
+  }
+
+  function handleEditKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitEdit();
+    } else if (e.key === 'Escape') {
+      setEditingIndex(null);
+      setEditingValue('');
+    }
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <span className="text-sm font-medium text-text">Ingredients</span>
@@ -39,7 +67,24 @@ export default function IngredientList({ ingredients, onChange }: IngredientList
               className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-black/8 text-sm text-text group"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-              <span className="flex-1">{ing}</span>
+              {editingIndex === idx ? (
+                <input
+                  autoFocus
+                  type="text"
+                  value={editingValue}
+                  onChange={(e) => setEditingValue(e.target.value)}
+                  onKeyDown={handleEditKeyDown}
+                  onBlur={commitEdit}
+                  className="flex-1 bg-transparent text-sm text-text focus:outline-none"
+                />
+              ) : (
+                <span
+                  className="flex-1 cursor-text"
+                  onClick={() => startEditing(idx)}
+                >
+                  {ing}
+                </span>
+              )}
               <button
                 type="button"
                 onClick={() => removeIngredient(idx)}
