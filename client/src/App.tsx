@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import RecipeCreatePage from './pages/RecipeCreatePage';
 import RecipeDetailPage from './pages/RecipeDetailPage';
 import RecipeEditPage from './pages/RecipeEditPage';
+import BoardDetailPage from './pages/BoardDetailPage';
 import AccountPage from './pages/AccountPage';
 import Layout from './components/layout/Layout';
 
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="recipes/new" element={<RecipeCreatePage />} />
           <Route path="recipes/:id" element={<RecipeDetailPage />} />
           <Route path="recipes/:id/edit" element={<RecipeEditPage />} />
+          <Route path="boards/:id" element={<BoardDetailPage />} />
           <Route path="account" element={<AccountPage />} />
         </Route>
       </Routes>

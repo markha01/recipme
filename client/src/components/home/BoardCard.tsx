@@ -8,7 +8,7 @@ interface BoardCardProps {
 export default function BoardCard({ board }: BoardCardProps) {
   return (
     <Link
-      to={`/?boardId=${board.id}`}
+      to={`/boards/${board.id}`}
       className="flex flex-col rounded-2xl overflow-hidden bg-white border border-black/8 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 p-4 gap-2"
     >
       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
