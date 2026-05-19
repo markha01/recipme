@@ -1,0 +1,11 @@
+{
+  "name": "shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./types.ts",
+  "exports": {
+    "./types": "./types.ts",
+    "./schemas": "./schemas.ts"
+  }
+}
