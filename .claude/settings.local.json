@@ -19,7 +19,10 @@
       "mcp__osc__get-my-app-logs",
       "mcp__osc__list-my-apps",
       "mcp__osc__get-my-app",
-      "mcp__osc__restart-my-app"
+      "mcp__osc__restart-my-app",
+      "mcp__osc__list-my-domains",
+      "mcp__osc__create-my-domain",
+      "mcp__osc__get-parameter"
     ]
   }
 }
