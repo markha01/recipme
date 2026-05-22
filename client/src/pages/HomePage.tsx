@@ -62,16 +62,23 @@ export default function HomePage() {
     };
   }, [search, selectedTags, sort, order, fetchRecipes]);
 
+  const fetchBoards = useCallback(() => {
+    setLoadingBoards(true);
+    listBoards()
+      .then(setBoards)
+      .catch(() => setBoards([]))
+      .finally(() => setLoadingBoards(false));
+  }, []);
+
   // Load boards when switching to boards tab
   useEffect(() => {
-    if (tab === 'boards') {
-      setLoadingBoards(true);
-      listBoards()
-        .then(setBoards)
-        .catch(() => setBoards([]))
-        .finally(() => setLoadingBoards(false));
-    }
-  }, [tab]);
+    if (tab === 'boards') fetchBoards();
+  }, [tab, fetchBoards]);
+
+  function handleBoardCreated() {
+    setTab('boards');
+    fetchBoards();
+  }
 
   function handleTagSelect(tag: Tag) {
     setSelectedTags((prev) => prev.some((t) => t.id === tag.id) ? prev : [...prev, tag]);
@@ -135,7 +142,7 @@ export default function HomePage() {
         )}
       </div>
 
-      <AddButton />
+      <AddButton onBoardCreated={handleBoardCreated} />
     </div>
   );
 }

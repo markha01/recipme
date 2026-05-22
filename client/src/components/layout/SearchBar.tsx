@@ -42,6 +42,19 @@ export default function SearchBar({
   const availableTags = tags.filter((t) => !selectedTagIds.includes(t.id));
   const showDropdown = focused && availableTags.length > 0;
 
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== 'Enter') return;
+    const trimmed = value.trim().toLowerCase();
+    if (!trimmed) return;
+    const exactMatch = availableTags.find((t) => t.name === trimmed);
+    if (exactMatch && onTagSelect) {
+      e.preventDefault();
+      onTagSelect(exactMatch);
+      onChange('');
+      setFocused(false);
+    }
+  }
+
   return (
     <div ref={containerRef} className="relative w-full">
       <div className="relative flex items-center">
@@ -57,6 +70,7 @@ export default function SearchBar({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
+          onKeyDown={handleKeyDown}
           placeholder="Search recipes or tags..."
           className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-black/10 bg-white text-sm text-text placeholder-text/40 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-150"
         />

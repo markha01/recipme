@@ -1,4 +1,4 @@
-import { and, eq, ilike, inArray, desc, asc, sql } from 'drizzle-orm';
+import { and, or, eq, ilike, inArray, desc, asc, sql } from 'drizzle-orm';
 import { getDb } from '../db/connection';
 import { recipes, ingredients, tags, recipeTags, boards, recipeBoards } from '../db/schema';
 import { deleteImage } from './storage.service';
@@ -23,7 +23,13 @@ export async function listRecipes(
   const conditions = [eq(recipes.userId, userId)];
 
   if (query.search) {
-    conditions.push(ilike(recipes.title, `%${query.search}%`));
+    const tagMatchSubquery = db
+      .select({ recipeId: recipeTags.recipeId })
+      .from(recipeTags)
+      .innerJoin(tags, and(eq(recipeTags.tagId, tags.id), ilike(tags.name, `%${query.search}%`)));
+    conditions.push(
+      or(ilike(recipes.title, `%${query.search}%`), inArray(recipes.id, tagMatchSubquery))!
+    );
   }
 
   let recipeList = await db
