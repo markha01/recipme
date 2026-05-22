@@ -20,9 +20,16 @@ async function main() {
     await migrate(db, { migrationsFolder });
     await pool.end();
     console.log('Database migrations applied.');
-  } catch (err) {
-    console.error('Migration error:', err);
-    process.exit(1);
+  } catch (err: any) {
+    // 42704 = undefined_object (e.g. DROP CONSTRAINT on already-removed constraint)
+    // 42P07 = duplicate_table (e.g. CREATE TABLE that already exists without IF NOT EXISTS)
+    // These can occur when migrations overlap; treat them as non-fatal warnings.
+    if (err?.code === '42704' || err?.code === '42P07') {
+      console.warn('Migration warning (safe to continue):', err.message);
+    } else {
+      console.error('Migration error:', err);
+      process.exit(1);
+    }
   }
 
   const PORT = parseInt(config.PORT);

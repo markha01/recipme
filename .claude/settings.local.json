@@ -16,7 +16,10 @@
       "mcp__osc__list-service-instances",
       "mcp__figma__get_design_context",
       "mcp__osc__wait-for-app-ready",
-      "mcp__osc__get-my-app-logs"
+      "mcp__osc__get-my-app-logs",
+      "mcp__osc__list-my-apps",
+      "mcp__osc__get-my-app",
+      "mcp__osc__restart-my-app"
     ]
   }
 }
