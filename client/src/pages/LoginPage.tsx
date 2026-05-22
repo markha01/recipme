@@ -37,8 +37,22 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
+        <button
+          onClick={() => navigate('/welcome')}
+          className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-black/5 transition-colors text-text mb-2"
+          aria-label="Go back"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+        </button>
+
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary">RecipMe</h1>
+          <span className="text-primary text-3xl leading-none">
+            <span style={{ fontFamily: "'Kalam', cursive" }}>Recip</span>
+            <span style={{ fontFamily: "'Homemade Apple', cursive" }}>Me</span>
+          </span>
           <p className="text-text/60 mt-1 text-sm">Your personal recipe collection</p>
         </div>
 

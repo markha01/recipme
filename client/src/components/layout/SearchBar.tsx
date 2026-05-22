@@ -40,7 +40,7 @@ export default function SearchBar({
   }, []);
 
   const availableTags = tags.filter((t) => !selectedTagIds.includes(t.id));
-  const showDropdown = focused && availableTags.length > 0;
+  const showDropdown = focused && (loadingTags || availableTags.length > 0);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== 'Enter') return;
@@ -51,7 +51,6 @@ export default function SearchBar({
       e.preventDefault();
       onTagSelect(exactMatch);
       onChange('');
-      setFocused(false);
     }
   }
 

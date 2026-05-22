@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
 import RecipeCreatePage from './pages/RecipeCreatePage';
 import RecipeDetailPage from './pages/RecipeDetailPage';
@@ -12,7 +13,7 @@ import Layout from './components/layout/Layout';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
-  if (!token) return <Navigate to="/login" replace />;
+  if (!token) return <Navigate to="/welcome" replace />;
   return <>{children}</>;
 }
 
@@ -26,6 +27,14 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route
+          path="/welcome"
+          element={
+            <GuestRoute>
+              <LandingPage />
+            </GuestRoute>
+          }
+        />
         <Route
           path="/login"
           element={
