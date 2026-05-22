@@ -3,7 +3,7 @@ import { z } from 'zod';
 const envSchema = z.object({
   PORT: z.string().default('3001'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  DATABASE_URL: z.string().min(1),
+  RECIPME_DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(1),
   MINIO_ENDPOINT: z.string().default('localhost'),
   MINIO_PORT: z.string().default('9000'),

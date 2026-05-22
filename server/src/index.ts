@@ -14,14 +14,11 @@ import { Pool } from 'pg';
 async function main() {
   const config = getConfig();
 
-  // Log DB host for diagnostics (no credentials)
-  try { const u = new URL(config.DATABASE_URL); console.log('DB host:', u.hostname, 'port:', u.port); } catch {}
-
   // Auto-run migrations on startup
   // Path works for both: dev (__dirname=server/src) and prod bundle (__dirname=server/dist)
   const migrationsFolder = path.resolve(__dirname, '../src/db/migrations');
   try {
-    const pool = new Pool({ connectionString: config.DATABASE_URL });
+    const pool = new Pool({ connectionString: config.RECIPME_DATABASE_URL });
     const db = drizzle(pool);
     await migrate(db, { migrationsFolder });
     await pool.end();
@@ -32,6 +29,9 @@ async function main() {
     // These can occur when migrations overlap; treat them as non-fatal warnings.
     if (err?.code === '42704' || err?.code === '42P07') {
       console.warn('Migration warning (safe to continue):', err.message);
+    } else if (err?.code === 'ENOTFOUND') {
+      console.error('Migration error: cannot reach DB host:', err.hostname, '— check DATABASE_URL in parameter store');
+      process.exit(1);
     } else {
       console.error('Migration error:', err);
       process.exit(1);
