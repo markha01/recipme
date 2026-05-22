@@ -13,6 +13,7 @@ export interface Board {
   userId: string;
   name: string;
   recipeCount: number;
+  previewImages?: (string | null)[];
   createdAt: string;
   updatedAt: string;
 }

@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { getDb } from '../db/connection';
 import { boards, recipes, recipeBoards } from '../db/schema';
 
@@ -18,26 +18,32 @@ export async function listBoards(userId: string) {
 
   if (boardList.length === 0) return [];
 
-  // Get recipe counts via junction table
-  const counts = await db
+  // Fetch recipe images per board (used for counts and preview thumbnails)
+  const boardRecipes = await db
     .select({
       boardId: recipeBoards.boardId,
-      count: sql<number>`count(*)::int`,
+      imageUrl: recipes.imageUrl,
     })
     .from(recipeBoards)
     .innerJoin(recipes, eq(recipeBoards.recipeId, recipes.id))
     .where(eq(recipes.userId, userId))
-    .groupBy(recipeBoards.boardId);
+    .orderBy(desc(recipes.createdAt));
 
   const countMap = new Map<string, number>();
-  for (const c of counts) {
-    countMap.set(c.boardId, c.count);
+  const imageMap = new Map<string, (string | null)[]>();
+
+  for (const row of boardRecipes) {
+    countMap.set(row.boardId, (countMap.get(row.boardId) ?? 0) + 1);
+    const imgs = imageMap.get(row.boardId) ?? [];
+    if (imgs.length < 3) imgs.push(row.imageUrl);
+    imageMap.set(row.boardId, imgs);
   }
 
   return boardList.map((b) => ({
     ...b,
     userId,
     recipeCount: countMap.get(b.id) ?? 0,
+    previewImages: imageMap.get(b.id) ?? [],
   }));
 }
 
