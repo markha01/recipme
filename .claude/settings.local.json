@@ -24,7 +24,8 @@
       "mcp__osc__create-my-domain",
       "mcp__osc__get-parameter",
       "mcp__osc__describe-service-instance",
-      "mcp__osc__get-instance-status"
+      "mcp__osc__get-instance-status",
+      "mcp__osc__set-parameter"
     ]
   }
 }
