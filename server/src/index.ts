@@ -1,6 +1,9 @@
 import * as dotenv from 'dotenv';
 import path from 'path';
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+// Only load .env file in development — in production OSC injects env vars directly
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+}
 
 import { getConfig } from './config';
 import app from './app';
@@ -10,6 +13,9 @@ import { Pool } from 'pg';
 
 async function main() {
   const config = getConfig();
+
+  // Log DB host for diagnostics (no credentials)
+  try { const u = new URL(config.DATABASE_URL); console.log('DB host:', u.hostname, 'port:', u.port); } catch {}
 
   // Auto-run migrations on startup
   // Path works for both: dev (__dirname=server/src) and prod bundle (__dirname=server/dist)

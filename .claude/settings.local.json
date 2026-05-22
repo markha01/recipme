@@ -22,7 +22,9 @@
       "mcp__osc__restart-my-app",
       "mcp__osc__list-my-domains",
       "mcp__osc__create-my-domain",
-      "mcp__osc__get-parameter"
+      "mcp__osc__get-parameter",
+      "mcp__osc__describe-service-instance",
+      "mcp__osc__get-instance-status"
     ]
   }
 }
