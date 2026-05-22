@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { createTag } from '../../api/tags';
+import { createTag, deleteTag } from '../../api/tags';
 import type { Tag } from '../../../../shared/types';
 
 interface TagInputProps {
@@ -11,6 +11,8 @@ export default function TagInput({ tags, onChange }: TagInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Track IDs of tags created in this session with no existing recipes
+  const newTagIds = useRef<Set<string>>(new Set());
 
   async function addTag() {
     const trimmed = inputValue.trim().toLowerCase();
@@ -23,6 +25,9 @@ export default function TagInput({ tags, onChange }: TagInputProps) {
 
     try {
       const tag = await createTag(trimmed);
+      if (tag.recipeCount === 0) {
+        newTagIds.current.add(tag.id);
+      }
       if (!tags.some((t) => t.id === tag.id)) {
         onChange([...tags, tag]);
       }
@@ -33,8 +38,12 @@ export default function TagInput({ tags, onChange }: TagInputProps) {
     }
   }
 
-  function removeTag(id: string) {
+  async function removeTag(id: string) {
     onChange(tags.filter((t) => t.id !== id));
+    if (newTagIds.current.has(id)) {
+      newTagIds.current.delete(id);
+      try { await deleteTag(id); } catch { /* ignore */ }
+    }
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {

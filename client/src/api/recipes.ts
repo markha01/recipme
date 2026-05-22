@@ -4,7 +4,7 @@ import type { Recipe, RecipeSummary, RecipesQuery } from '../../../shared/types'
 export function listRecipes(query: RecipesQuery = {}): Promise<RecipeSummary[]> {
   const params = new URLSearchParams();
   if (query.search) params.set('search', query.search);
-  if (query.tagId) params.set('tagId', query.tagId);
+  query.tagIds?.forEach((id) => params.append('tagIds', id));
   if (query.sort) params.set('sort', query.sort);
   if (query.order) params.set('order', query.order);
   const qs = params.toString();
@@ -22,7 +22,7 @@ export function createRecipe(data: {
   prepTimeMin?: number | null;
   cookTimeMin?: number | null;
   instructions?: string | null;
-  boardId?: string | null;
+  boardIds?: string[];
   ingredients?: { text: string; sortOrder: number }[];
   tagIds?: string[];
 }): Promise<Recipe> {

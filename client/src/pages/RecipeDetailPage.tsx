@@ -161,13 +161,17 @@ export default function RecipeDetailPage() {
         </div>
       )}
 
-      {/* Board */}
-      {recipe.board && (
-        <div className="flex items-center gap-2 mb-4 text-sm text-text/60">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          </svg>
-          <span>{recipe.board.name}</span>
+      {/* Boards */}
+      {recipe.boards.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {recipe.boards.map((board) => (
+            <div key={board.id} className="flex items-center gap-1.5 text-sm text-text/60">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              </svg>
+              <span>{board.name}</span>
+            </div>
+          ))}
         </div>
       )}
 

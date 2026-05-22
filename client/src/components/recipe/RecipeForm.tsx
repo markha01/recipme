@@ -15,7 +15,7 @@ export interface RecipeFormData {
   prepTimeMin: number | null;
   cookTimeMin: number | null;
   instructions: string;
-  boardId: string | null;
+  boardIds: string[];
   ingredients: string[];
   tags: Tag[];
 }
@@ -41,7 +41,7 @@ export default function RecipeForm({
   const [prepTimeMin, setPrepTimeMin] = useState<number | null>(initialData?.prepTimeMin ?? null);
   const [cookTimeMin, setCookTimeMin] = useState<number | null>(initialData?.cookTimeMin ?? null);
   const [instructions, setInstructions] = useState(initialData?.instructions ?? '');
-  const [boardId, setBoardId] = useState<string | null>(initialData?.boardId ?? null);
+  const [boardIds, setBoardIds] = useState<string[]>(initialData?.boardIds ?? []);
   const [ingredients, setIngredients] = useState<string[]>(initialData?.ingredients ?? []);
   const [tags, setTags] = useState<Tag[]>(initialData?.tags ?? []);
 
@@ -57,7 +57,7 @@ export default function RecipeForm({
       prepTimeMin,
       cookTimeMin,
       instructions,
-      boardId,
+      boardIds,
       ingredients,
       tags,
     });
@@ -106,7 +106,7 @@ export default function RecipeForm({
         />
       </div>
 
-      <BoardSelector value={boardId} onChange={setBoardId} />
+      <BoardSelector value={boardIds} onChange={setBoardIds} />
 
       <TagInput tags={tags} onChange={setTags} />
 

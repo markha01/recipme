@@ -6,16 +6,14 @@ interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
   onTagSelect?: (tag: Tag) => void;
-  selectedTagId?: string | null;
-  onClearTag?: () => void;
+  selectedTagIds?: string[];
 }
 
 export default function SearchBar({
   value,
   onChange,
   onTagSelect,
-  selectedTagId,
-  onClearTag,
+  selectedTagIds = [],
 }: SearchBarProps) {
   const [focused, setFocused] = useState(false);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -41,7 +39,8 @@ export default function SearchBar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const showDropdown = focused && tags.length > 0 && !selectedTagId;
+  const availableTags = tags.filter((t) => !selectedTagIds.includes(t.id));
+  const showDropdown = focused && availableTags.length > 0;
 
   return (
     <div ref={containerRef} className="relative w-full">
@@ -61,19 +60,6 @@ export default function SearchBar({
           placeholder="Search recipes or tags..."
           className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-black/10 bg-white text-sm text-text placeholder-text/40 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-150"
         />
-
-        {selectedTagId && onClearTag && (
-          <button
-            onClick={onClearTag}
-            className="absolute right-3 text-text/50 hover:text-text transition-colors"
-            aria-label="Clear tag filter"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        )}
       </div>
 
       {showDropdown && (
@@ -82,13 +68,12 @@ export default function SearchBar({
             <div className="px-4 py-3 text-sm text-text/50">Loading...</div>
           ) : (
             <ul>
-              {tags.map((tag) => (
+              {availableTags.map((tag) => (
                 <li key={tag.id}>
                   <button
                     onMouseDown={(e) => {
                       e.preventDefault();
                       onTagSelect?.(tag);
-                      setFocused(false);
                       onChange('');
                     }}
                     className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-black/5 transition-colors text-left"

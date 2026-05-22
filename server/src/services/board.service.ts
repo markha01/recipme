@@ -1,6 +1,6 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { getDb } from '../db/connection';
-import { boards, recipes } from '../db/schema';
+import { boards, recipes, recipeBoards } from '../db/schema';
 
 export async function listBoards(userId: string) {
   const db = getDb();
@@ -18,19 +18,20 @@ export async function listBoards(userId: string) {
 
   if (boardList.length === 0) return [];
 
-  // Get recipe counts
+  // Get recipe counts via junction table
   const counts = await db
     .select({
-      boardId: recipes.boardId,
+      boardId: recipeBoards.boardId,
       count: sql<number>`count(*)::int`,
     })
-    .from(recipes)
+    .from(recipeBoards)
+    .innerJoin(recipes, eq(recipeBoards.recipeId, recipes.id))
     .where(eq(recipes.userId, userId))
-    .groupBy(recipes.boardId);
+    .groupBy(recipeBoards.boardId);
 
   const countMap = new Map<string, number>();
   for (const c of counts) {
-    if (c.boardId) countMap.set(c.boardId, c.count);
+    countMap.set(c.boardId, c.count);
   }
 
   return boardList.map((b) => ({
@@ -51,8 +52,9 @@ export async function getBoard(boardId: string, userId: string) {
 
   const count = await db
     .select({ count: sql<number>`count(*)::int` })
-    .from(recipes)
-    .where(and(eq(recipes.boardId, boardId), eq(recipes.userId, userId)));
+    .from(recipeBoards)
+    .innerJoin(recipes, eq(recipeBoards.recipeId, recipes.id))
+    .where(and(eq(recipeBoards.boardId, boardId), eq(recipes.userId, userId)));
 
   return {
     ...board,

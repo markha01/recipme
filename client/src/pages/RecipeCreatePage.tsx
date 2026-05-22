@@ -3,11 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { createRecipe } from '../api/recipes';
 import RecipeForm, { RecipeFormData } from '../components/recipe/RecipeForm';
 import SearchBar from '../components/layout/SearchBar';
+import type { Tag } from '../../../shared/types';
 
 export default function RecipeCreatePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const navigate = useNavigate();
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (search.trim()) {
+      navigate(`/?search=${encodeURIComponent(search.trim())}`);
+    }
+  }
+
+  function handleTagSelect(tag: Tag) {
+    navigate(`/?tagId=${tag.id}&tagName=${encodeURIComponent(tag.name)}`);
+  }
 
   async function handleSubmit(data: RecipeFormData) {
     setLoading(true);
@@ -20,7 +33,7 @@ export default function RecipeCreatePage() {
         prepTimeMin: data.prepTimeMin,
         cookTimeMin: data.cookTimeMin,
         instructions: data.instructions || null,
-        boardId: data.boardId,
+        boardIds: data.boardIds,
         ingredients: data.ingredients.map((text, i) => ({ text, sortOrder: i })),
         tagIds: data.tags.map((t) => t.id),
       });
@@ -35,9 +48,9 @@ export default function RecipeCreatePage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 md:px-8 md:py-6">
       {/* Persistent search bar (same position as home) */}
-      <div className="mb-4">
-        <SearchBar value="" onChange={() => {}} />
-      </div>
+      <form onSubmit={handleSearchSubmit} className="mb-4">
+        <SearchBar value={search} onChange={setSearch} onTagSelect={handleTagSelect} />
+      </form>
 
       {/* Header row */}
       <div className="flex items-center gap-3 mb-6">

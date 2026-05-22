@@ -34,7 +34,6 @@ export interface Ingredient {
 export interface Recipe {
   id: string;
   userId: string;
-  boardId: string | null;
   title: string;
   imageUrl: string | null;
   servings: number | null;
@@ -43,7 +42,7 @@ export interface Recipe {
   instructions: string | null;
   ingredients: Ingredient[];
   tags: Tag[];
-  board: Board | null;
+  boards: Board[];
   createdAt: string;
   updatedAt: string;
 }
@@ -64,7 +63,7 @@ export type SortOrder = 'asc' | 'desc';
 
 export interface RecipesQuery {
   search?: string;
-  tagId?: string;
+  tagIds?: string[];
   sort?: SortField;
   order?: SortOrder;
 }

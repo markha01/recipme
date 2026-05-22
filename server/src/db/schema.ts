@@ -45,9 +45,6 @@ export const recipes = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    boardId: uuid('board_id').references(() => boards.id, {
-      onDelete: 'set null',
-    }),
     title: varchar('title', { length: 200 }).notNull(),
     imageUrl: text('image_url'),
     servings: integer('servings'),
@@ -62,6 +59,22 @@ export const recipes = pgTable(
       t.userId,
       t.createdAt
     ),
+  })
+);
+
+export const recipeBoards = pgTable(
+  'recipe_boards',
+  {
+    recipeId: uuid('recipe_id')
+      .notNull()
+      .references(() => recipes.id, { onDelete: 'cascade' }),
+    boardId: uuid('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.recipeId, t.boardId] }),
+    boardIdx: index('recipe_boards_board_idx').on(t.boardId),
   })
 );
 
@@ -118,14 +131,25 @@ export const usersRelations = relations(users, ({ many }) => ({
 
 export const boardsRelations = relations(boards, ({ one, many }) => ({
   user: one(users, { fields: [boards.userId], references: [users.id] }),
-  recipes: many(recipes),
+  recipeBoards: many(recipeBoards),
 }));
 
 export const recipesRelations = relations(recipes, ({ one, many }) => ({
   user: one(users, { fields: [recipes.userId], references: [users.id] }),
-  board: one(boards, { fields: [recipes.boardId], references: [boards.id] }),
+  recipeBoards: many(recipeBoards),
   ingredients: many(ingredients),
   recipeTags: many(recipeTags),
+}));
+
+export const recipeBoardsRelations = relations(recipeBoards, ({ one }) => ({
+  recipe: one(recipes, {
+    fields: [recipeBoards.recipeId],
+    references: [recipes.id],
+  }),
+  board: one(boards, {
+    fields: [recipeBoards.boardId],
+    references: [boards.id],
+  }),
 }));
 
 export const ingredientsRelations = relations(ingredients, ({ one }) => ({

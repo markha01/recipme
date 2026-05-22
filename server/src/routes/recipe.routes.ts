@@ -14,8 +14,14 @@ router.use(authMiddleware);
 
 router.get('/', async (req: AuthRequest, res, next) => {
   try {
-    const { search, tagId, sort, order } = req.query as Record<string, string>;
-    const result = await listRecipes(req.user!.id, { search, tagId, sort, order });
+    const { search, sort, order } = req.query as Record<string, string>;
+    const rawTagIds = req.query.tagIds;
+    const tagIds = rawTagIds
+      ? Array.isArray(rawTagIds)
+        ? (rawTagIds as string[])
+        : [rawTagIds as string]
+      : undefined;
+    const result = await listRecipes(req.user!.id, { search, tagIds, sort, order });
     res.json(result);
   } catch (err) { next(err); }
 });

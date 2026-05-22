@@ -43,7 +43,7 @@ export const createRecipeSchema = z.object({
   prepTimeMin: z.number().int().min(0).nullable().optional(),
   cookTimeMin: z.number().int().min(0).nullable().optional(),
   instructions: z.string().nullable().optional(),
-  boardId: z.string().uuid().nullable().optional(),
+  boardIds: z.array(z.string().uuid()).optional().default([]),
   ingredients: z.array(ingredientSchema).optional().default([]),
   tagIds: z.array(z.string().uuid()).optional().default([]),
 });

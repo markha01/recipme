@@ -14,7 +14,7 @@ export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState<'recipes' | 'boards'>('recipes');
   const [search, setSearch] = useState('');
-  const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [sort, setSort] = useState<SortField>('created_at');
   const [order, setOrder] = useState<SortOrder>('desc');
   const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
@@ -23,21 +23,27 @@ export default function HomePage() {
   const [loadingBoards, setLoadingBoards] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Read tag filter from URL params (e.g. when navigating from recipe detail page)
+  // Read tag/search filter from URL params (e.g. when navigating from recipe detail or create page)
   useEffect(() => {
     const tagId = searchParams.get('tagId');
     const tagName = searchParams.get('tagName');
+    const searchQuery = searchParams.get('search');
     if (tagId && tagName) {
-      setSelectedTag({ id: tagId, name: decodeURIComponent(tagName), userId: '', recipeCount: 0 });
+      setSelectedTags([{ id: tagId, name: decodeURIComponent(tagName), userId: '', recipeCount: 0 }]);
+    }
+    if (searchQuery) {
+      setSearch(decodeURIComponent(searchQuery));
+    }
+    if (tagId || searchQuery) {
       setSearchParams({}, { replace: true });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchRecipes = useCallback(
-    (searchVal: string, tagId: string | undefined, sortVal: SortField, orderVal: SortOrder) => {
+    (searchVal: string, tagIds: string[], sortVal: SortField, orderVal: SortOrder) => {
       setLoadingRecipes(true);
-      listRecipes({ search: searchVal || undefined, tagId, sort: sortVal, order: orderVal })
+      listRecipes({ search: searchVal || undefined, tagIds: tagIds.length ? tagIds : undefined, sort: sortVal, order: orderVal })
         .then(setRecipes)
         .catch(() => setRecipes([]))
         .finally(() => setLoadingRecipes(false));
@@ -49,12 +55,12 @@ export default function HomePage() {
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchRecipes(search, selectedTag?.id, sort, order);
+      fetchRecipes(search, selectedTags.map((t) => t.id), sort, order);
     }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [search, selectedTag, sort, order, fetchRecipes]);
+  }, [search, selectedTags, sort, order, fetchRecipes]);
 
   // Load boards when switching to boards tab
   useEffect(() => {
@@ -68,12 +74,12 @@ export default function HomePage() {
   }, [tab]);
 
   function handleTagSelect(tag: Tag) {
-    setSelectedTag(tag);
+    setSelectedTags((prev) => prev.some((t) => t.id === tag.id) ? prev : [...prev, tag]);
     setSearch('');
   }
 
-  function handleClearTag() {
-    setSelectedTag(null);
+  function handleRemoveTag(tagId: string) {
+    setSelectedTags((prev) => prev.filter((t) => t.id !== tagId));
   }
 
   return (
@@ -85,8 +91,7 @@ export default function HomePage() {
             value={search}
             onChange={setSearch}
             onTagSelect={handleTagSelect}
-            selectedTagId={selectedTag?.id}
-            onClearTag={handleClearTag}
+            selectedTagIds={selectedTags.map((t) => t.id)}
           />
         </div>
         {tab === 'recipes' && (
@@ -94,19 +99,24 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Active tag badge */}
-      {selectedTag && (
-        <div className="flex items-center gap-2 mb-3">
+      {/* Active tag badges */}
+      {selectedTags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-3">
           <span className="text-sm text-text/60">Filtering by:</span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary/15 text-secondary rounded-full text-sm font-medium">
-            {selectedTag.name}
-            <button onClick={handleClearTag} className="hover:text-red-500 transition-colors">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </span>
+          {selectedTags.map((tag) => (
+            <span
+              key={tag.id}
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary/15 text-secondary rounded-full text-sm font-medium"
+            >
+              {tag.name}
+              <button onClick={() => handleRemoveTag(tag.id)} className="hover:text-red-500 transition-colors">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </span>
+          ))}
         </div>
       )}
 
@@ -118,7 +128,7 @@ export default function HomePage() {
           <RecipeGrid
             recipes={recipes}
             loading={loadingRecipes}
-            emptyMessage={search || selectedTag ? 'No recipes match your search' : 'No recipes yet. Tap + to add one!'}
+            emptyMessage={search || selectedTags.length ? 'No recipes match your search' : 'No recipes yet. Tap + to add one!'}
           />
         ) : (
           <BoardGrid boards={boards} loading={loadingBoards} />

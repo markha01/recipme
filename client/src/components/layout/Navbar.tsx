@@ -28,7 +28,9 @@ export default function Navbar() {
     <>
       {/* Desktop: top bar */}
       <nav className="hidden md:flex fixed top-0 left-0 right-0 z-40 h-16 bg-background border-b border-black/8 items-center px-8 justify-between">
-        <span className="text-primary font-bold text-xl tracking-tight">RecipMe</span>
+        <span className="text-primary text-3xl leading-none">
+          <span style={{ fontFamily: "'Kalam', cursive" }}>Recip</span><span style={{ fontFamily: "'Homemade Apple', cursive" }}>Me</span>
+        </span>
         <div className="flex gap-2">
           <NavLink to="/" end className={linkClass}>
             <HomeIcon />

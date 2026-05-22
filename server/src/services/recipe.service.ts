@@ -1,6 +1,6 @@
 import { and, eq, ilike, inArray, desc, asc, sql } from 'drizzle-orm';
 import { getDb } from '../db/connection';
-import { recipes, ingredients, tags, recipeTags, boards } from '../db/schema';
+import { recipes, ingredients, tags, recipeTags, boards, recipeBoards } from '../db/schema';
 import { deleteImage } from './storage.service';
 
 interface RecipeInput {
@@ -10,14 +10,14 @@ interface RecipeInput {
   prepTimeMin?: number | null;
   cookTimeMin?: number | null;
   instructions?: string | null;
-  boardId?: string | null;
+  boardIds?: string[];
   ingredients?: { text: string; sortOrder: number }[];
   tagIds?: string[];
 }
 
 export async function listRecipes(
   userId: string,
-  query: { search?: string; tagId?: string; sort?: string; order?: string }
+  query: { search?: string; tagIds?: string[]; sort?: string; order?: string }
 ) {
   const db = getDb();
   const conditions = [eq(recipes.userId, userId)];
@@ -52,13 +52,16 @@ export async function listRecipes(
 
   const recipeIds = recipeList.map((r) => r.id);
 
-  // Filter by tag if needed
-  if (query.tagId) {
-    const taggedRecipeIds = await db
+  // Filter by tags (AND logic — recipe must have ALL specified tags)
+  if (query.tagIds?.length) {
+    const tagCount = query.tagIds.length;
+    const taggedRows = await db
       .select({ recipeId: recipeTags.recipeId })
       .from(recipeTags)
-      .where(and(eq(recipeTags.tagId, query.tagId), inArray(recipeTags.recipeId, recipeIds)));
-    const taggedSet = new Set(taggedRecipeIds.map((r) => r.recipeId));
+      .where(and(inArray(recipeTags.tagId, query.tagIds), inArray(recipeTags.recipeId, recipeIds)))
+      .groupBy(recipeTags.recipeId)
+      .having(sql`count(distinct ${recipeTags.tagId}) = ${tagCount}`);
+    const taggedSet = new Set(taggedRows.map((r) => r.recipeId));
     recipeList = recipeList.filter((r) => taggedSet.has(r.id));
     if (recipeList.length === 0) return [];
   }
@@ -110,17 +113,23 @@ export async function getRecipe(recipeId: string, userId: string) {
     .innerJoin(tags, eq(recipeTags.tagId, tags.id))
     .where(eq(recipeTags.recipeId, recipeId));
 
-  let board = null;
-  if (recipe.boardId) {
-    const [b] = await db.select().from(boards).where(eq(boards.id, recipe.boardId));
-    if (b) board = { ...b, recipeCount: 0 };
-  }
+  const recipeBoardRows = await db
+    .select({
+      id: boards.id,
+      name: boards.name,
+      userId: boards.userId,
+      createdAt: boards.createdAt,
+      updatedAt: boards.updatedAt,
+    })
+    .from(recipeBoards)
+    .innerJoin(boards, eq(recipeBoards.boardId, boards.id))
+    .where(eq(recipeBoards.recipeId, recipeId));
 
   return {
     ...recipe,
     ingredients: recipeIngredients,
     tags: recipeTagRows.map((t) => ({ ...t, recipeCount: 0, userId })),
-    board,
+    boards: recipeBoardRows.map((b) => ({ ...b, recipeCount: 0 })),
   };
 }
 
@@ -137,7 +146,6 @@ export async function createRecipe(userId: string, input: RecipeInput) {
       prepTimeMin: input.prepTimeMin ?? null,
       cookTimeMin: input.cookTimeMin ?? null,
       instructions: input.instructions ?? null,
-      boardId: input.boardId ?? null,
     })
     .returning();
 
@@ -154,6 +162,12 @@ export async function createRecipe(userId: string, input: RecipeInput) {
   if (input.tagIds?.length) {
     await db.insert(recipeTags).values(
       input.tagIds.map((tagId) => ({ recipeId: recipe.id, tagId }))
+    );
+  }
+
+  if (input.boardIds?.length) {
+    await db.insert(recipeBoards).values(
+      input.boardIds.map((boardId) => ({ recipeId: recipe.id, boardId }))
     );
   }
 
@@ -177,7 +191,6 @@ export async function updateRecipe(recipeId: string, userId: string, input: Part
   if (input.prepTimeMin !== undefined) updateData.prepTimeMin = input.prepTimeMin;
   if (input.cookTimeMin !== undefined) updateData.cookTimeMin = input.cookTimeMin;
   if (input.instructions !== undefined) updateData.instructions = input.instructions;
-  if (input.boardId !== undefined) updateData.boardId = input.boardId;
   updateData.updatedAt = new Date();
 
   await db
@@ -203,6 +216,15 @@ export async function updateRecipe(recipeId: string, userId: string, input: Part
     if (input.tagIds.length > 0) {
       await db.insert(recipeTags).values(
         input.tagIds.map((tagId) => ({ recipeId, tagId }))
+      );
+    }
+  }
+
+  if (input.boardIds !== undefined) {
+    await db.delete(recipeBoards).where(eq(recipeBoards.recipeId, recipeId));
+    if (input.boardIds.length > 0) {
+      await db.insert(recipeBoards).values(
+        input.boardIds.map((boardId) => ({ recipeId, boardId }))
       );
     }
   }
@@ -245,7 +267,8 @@ export async function listBoardRecipes(boardId: string, userId: string) {
       updatedAt: recipes.updatedAt,
     })
     .from(recipes)
-    .where(and(eq(recipes.boardId, boardId), eq(recipes.userId, userId)))
+    .innerJoin(recipeBoards, eq(recipeBoards.recipeId, recipes.id))
+    .where(and(eq(recipeBoards.boardId, boardId), eq(recipes.userId, userId)))
     .orderBy(desc(recipes.createdAt));
 
   if (recipeList.length === 0) return [];

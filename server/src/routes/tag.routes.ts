@@ -27,6 +27,7 @@ router.get('/', async (req: AuthRequest, res, next) => {
       .leftJoin(recipeTags, eq(recipeTags.tagId, tags.id))
       .where(and(...conditions))
       .groupBy(tags.id)
+      .having(sql`count(${recipeTags.recipeId}) >= 1`)
       .orderBy(tags.name);
 
     res.json(tagList);
@@ -51,7 +52,11 @@ router.post('/', async (req: AuthRequest, res, next) => {
       .where(and(eq(tags.userId, req.user!.id), eq(tags.name, tagName)));
 
     if (existing) {
-      res.json({ ...existing, recipeCount: 0 });
+      const [countRow] = await db
+        .select({ recipeCount: sql<number>`count(${recipeTags.recipeId})::int` })
+        .from(recipeTags)
+        .where(eq(recipeTags.tagId, existing.id));
+      res.json({ ...existing, recipeCount: countRow?.recipeCount ?? 0 });
       return;
     }
 

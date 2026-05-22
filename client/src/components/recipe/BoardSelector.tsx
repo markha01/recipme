@@ -3,8 +3,8 @@ import { listBoards, createBoard } from '../../api/boards';
 import type { Board } from '../../../../shared/types';
 
 interface BoardSelectorProps {
-  value: string | null;
-  onChange: (boardId: string | null) => void;
+  value: string[];
+  onChange: (boardIds: string[]) => void;
 }
 
 export default function BoardSelector({ value, onChange }: BoardSelectorProps) {
@@ -35,17 +35,32 @@ export default function BoardSelector({ value, onChange }: BoardSelectorProps) {
     try {
       const board = await createBoard(name);
       setBoards((prev) => [...prev, board]);
-      onChange(board.id);
+      onChange([...value, board.id]);
       setNewBoardName('');
-      setOpen(false);
-    } catch (err) {
+    } catch {
       setError('Could not create board');
     } finally {
       setCreating(false);
     }
   }
 
-  const selectedBoard = boards.find((b) => b.id === value);
+  function toggleBoard(boardId: string) {
+    if (value.includes(boardId)) {
+      onChange(value.filter((id) => id !== boardId));
+    } else {
+      onChange([...value, boardId]);
+    }
+  }
+
+  const selectedBoards = boards.filter((b) => value.includes(b.id));
+  const triggerLabel =
+    selectedBoards.length === 0
+      ? 'Select boards (optional)'
+      : selectedBoards.length === 1
+      ? selectedBoards[0].name
+      : selectedBoards.length === 2
+      ? selectedBoards.map((b) => b.name).join(', ')
+      : `${selectedBoards.length} boards selected`;
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -56,37 +71,39 @@ export default function BoardSelector({ value, onChange }: BoardSelectorProps) {
           onClick={() => setOpen((o) => !o)}
           className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-black/10 bg-white text-sm text-left transition-colors hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/50"
         >
-          <span className={selectedBoard ? 'text-text' : 'text-text/40'}>
-            {selectedBoard ? selectedBoard.name : 'Select a board (optional)'}
+          <span className={selectedBoards.length > 0 ? 'text-text' : 'text-text/40'}>
+            {triggerLabel}
           </span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-text/40 transition-transform ${open ? 'rotate-180' : ''}`}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-text/40 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`}>
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </button>
 
         {open && (
           <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-black/10 shadow-lg z-30 overflow-hidden">
-            {value && (
-              <button
-                type="button"
-                onClick={() => { onChange(null); setOpen(false); }}
-                className="w-full text-left px-4 py-2.5 text-sm text-text/50 hover:bg-black/5 transition-colors"
-              >
-                None
-              </button>
+            {boards.length === 0 && (
+              <p className="px-4 py-2.5 text-sm text-text/40">No boards yet</p>
             )}
-            {boards.map((board) => (
-              <button
-                key={board.id}
-                type="button"
-                onClick={() => { onChange(board.id); setOpen(false); }}
-                className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-black/5 ${
-                  board.id === value ? 'text-primary font-medium' : 'text-text'
-                }`}
-              >
-                {board.name}
-              </button>
-            ))}
+            {boards.map((board) => {
+              const selected = value.includes(board.id);
+              return (
+                <button
+                  key={board.id}
+                  type="button"
+                  onClick={() => toggleBoard(board.id)}
+                  className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-black/5 flex items-center justify-between ${
+                    selected ? 'text-primary font-medium' : 'text-text'
+                  }`}
+                >
+                  <span>{board.name}</span>
+                  {selected && (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary flex-shrink-0">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
 
             <div className="border-t border-black/8 px-3 py-2">
               <div className="flex items-center gap-2">

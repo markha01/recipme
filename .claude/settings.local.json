@@ -13,7 +13,8 @@
       "Bash(DATABASE_URL=\"postgresql://user:password@localhost:5432/recipme\" \"../node_modules/.bin/drizzle-kit\" generate:*)",
       "mcp__osc__list-my-services",
       "mcp__osc__get-service-schema",
-      "mcp__osc__list-service-instances"
+      "mcp__osc__list-service-instances",
+      "mcp__figma__get_design_context"
     ]
   }
 }

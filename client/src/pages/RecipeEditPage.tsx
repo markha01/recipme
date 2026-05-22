@@ -35,7 +35,7 @@ export default function RecipeEditPage() {
         prepTimeMin: data.prepTimeMin,
         cookTimeMin: data.cookTimeMin,
         instructions: data.instructions || null,
-        boardId: data.boardId,
+        boardIds: data.boardIds,
         ingredients: data.ingredients.map((text, i) => ({ text, sortOrder: i })),
         tagIds: data.tags.map((t) => t.id),
       });
@@ -90,7 +90,7 @@ export default function RecipeEditPage() {
           prepTimeMin: recipe.prepTimeMin,
           cookTimeMin: recipe.cookTimeMin,
           instructions: recipe.instructions ?? '',
-          boardId: recipe.boardId,
+          boardIds: recipe.boards.map((b) => b.id),
           ingredients: recipe.ingredients.map((i) => i.text),
           tags: recipe.tags,
         }}
